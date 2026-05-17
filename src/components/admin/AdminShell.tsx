@@ -54,11 +54,8 @@ export function AdminShell({ children }: AdminShellProps) {
         </div>
       </aside>
 
-      <div className="pl-60">
-        <header className="border-b border-slate-800 bg-slate-900/80 px-8 py-4 backdrop-blur">
-          <p className="text-sm text-slate-400">Manage your store inventory and orders</p>
-        </header>
-        <main className="mx-auto max-w-5xl px-8 py-8">{children}</main>
+      <div className="min-h-screen w-full min-w-0 pl-60">
+        <main className="w-full min-w-0 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );

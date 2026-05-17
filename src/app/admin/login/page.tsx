@@ -14,11 +14,6 @@ export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
           Admin access
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-white">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Sign in with your Supabase account. Users are stored in{" "}
-          <span className="text-slate-300">auth.users</span> and{" "}
-          <span className="text-slate-300">profiles</span>.
-        </p>
 
         {params.error === "profile" && (
           <p className="mt-4 rounded-lg border border-amber-900/50 bg-amber-950/50 px-3 py-2 text-sm text-amber-200">

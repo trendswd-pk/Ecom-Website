@@ -1,65 +1,108 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import {
   createProduct,
+  updateProduct,
   type ProductFormState,
 } from "@/app/admin/(panel)/products/actions";
+import type { ProductListItem } from "@/components/admin/ProductsTable";
 
 const initialState: ProductFormState = {};
 
 const inputClassName =
   "mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
 
-export function ProductForm() {
-  const [state, formAction, isPending] = useActionState(
-    createProduct,
-    initialState,
-  );
+type ProductFormProps = {
+  mode?: "create" | "edit";
+  product?: ProductListItem;
+  onSuccess?: () => void;
+};
+
+export function ProductForm({
+  mode = "create",
+  product,
+  onSuccess,
+}: ProductFormProps) {
+  const isEdit = mode === "edit" && product;
+  const action = isEdit ? updateProduct : createProduct;
+
+  const [state, formAction, isPending] = useActionState(action, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      onSuccess?.();
+    }
+  }, [state.success, onSuccess]);
 
   return (
     <form action={formAction} className="space-y-5">
+      {isEdit && <input type="hidden" name="productId" value={product.id} />}
+
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-slate-300">
+        <label htmlFor={`name-${product?.id ?? "new"}`} className="block text-sm font-medium text-slate-300">
           Name
         </label>
         <input
-          id="name"
+          id={`name-${product?.id ?? "new"}`}
           name="name"
           type="text"
           required
+          defaultValue={product?.name}
           className={inputClassName}
           placeholder="Wireless headphones"
         />
       </div>
 
       <div>
-        <label htmlFor="price" className="block text-sm font-medium text-slate-300">
+        <label htmlFor={`price-${product?.id ?? "new"}`} className="block text-sm font-medium text-slate-300">
           Price
         </label>
         <input
-          id="price"
+          id={`price-${product?.id ?? "new"}`}
           name="price"
           type="number"
           min="0"
           step="0.01"
           required
+          defaultValue={product?.price}
           className={inputClassName}
           placeholder="29.99"
         />
       </div>
 
+      {isEdit && (
+        <div>
+          <label
+            htmlFor={`stock-${product.id}`}
+            className="block text-sm font-medium text-slate-300"
+          >
+            Stock
+          </label>
+          <input
+            id={`stock-${product.id}`}
+            name="stock_quantity"
+            type="number"
+            min="0"
+            required
+            defaultValue={product.stock_quantity}
+            className={inputClassName}
+          />
+        </div>
+      )}
+
       <div>
         <label
-          htmlFor="description"
+          htmlFor={`description-${product?.id ?? "new"}`}
           className="block text-sm font-medium text-slate-300"
         >
           Description
         </label>
         <textarea
-          id="description"
+          id={`description-${product?.id ?? "new"}`}
           name="description"
           rows={4}
+          defaultValue={product?.description ?? ""}
           className={inputClassName}
           placeholder="Short product description..."
         />
@@ -67,15 +110,16 @@ export function ProductForm() {
 
       <div>
         <label
-          htmlFor="image_url"
+          htmlFor={`image_url-${product?.id ?? "new"}`}
           className="block text-sm font-medium text-slate-300"
         >
           Image URL
         </label>
         <input
-          id="image_url"
+          id={`image_url-${product?.id ?? "new"}`}
           name="image_url"
           type="url"
+          defaultValue={product?.image_url ?? ""}
           className={inputClassName}
           placeholder="https://example.com/image.jpg"
         />
@@ -89,7 +133,7 @@ export function ProductForm() {
 
       {state.success && (
         <p className="rounded-lg border border-emerald-900/50 bg-emerald-950/50 px-3 py-2 text-sm text-emerald-300">
-          Product saved successfully.
+          {isEdit ? "Product updated successfully." : "Product saved successfully."}
         </p>
       )}
 
@@ -98,7 +142,7 @@ export function ProductForm() {
         disabled={isPending}
         className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isPending ? "Saving..." : "Add product"}
+        {isPending ? "Saving..." : isEdit ? "Save changes" : "Add product"}
       </button>
     </form>
   );
