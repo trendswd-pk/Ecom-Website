@@ -1,0 +1,17 @@
+-- Reference: how passwords are stored in this project
+--
+-- Table: auth.users (managed by Supabase Auth, not public schema)
+-- Column: encrypted_password — bcrypt hash, never plain text
+--
+-- Creating users (hash applied by Supabase):
+--   • Dashboard → Authentication → Users → Add user
+--   • npm run seed:admin  (uses Auth Admin API)
+--   • supabase.auth.signUp() / auth.admin.createUser()
+--
+-- public.profiles must NOT have a password column.
+-- Login flow: src/app/admin/login/actions.ts → signInWithPassword()
+
+-- Verify a user exists (email only; password hash is not readable as plain text):
+-- select id, email, encrypted_password is not null as has_password
+-- from auth.users
+-- where email = 'admin@trendswd.com';
