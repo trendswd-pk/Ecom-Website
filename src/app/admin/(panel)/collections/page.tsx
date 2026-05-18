@@ -19,7 +19,7 @@ export default async function AdminCollectionsPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-400">
-        Group products and control what appears in your storefront navigation menu.
+        Group products into collections for your storefront pages.
       </p>
 
       <section className="mt-6 w-full min-w-0 sm:mt-8">

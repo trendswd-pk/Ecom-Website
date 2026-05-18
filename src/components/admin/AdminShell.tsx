@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/collections", label: "Collections" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/settings", label: "Website Settings" },
 ];
 
 export function AdminShell({ children }: AdminShellProps) {

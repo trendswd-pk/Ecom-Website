@@ -62,7 +62,7 @@ export async function createCollection(
         slug,
         description: payload.description.trim() || null,
         sort_order: payload.sort_order,
-        show_in_menu: payload.show_in_menu,
+        show_in_menu: false,
         updated_at: new Date().toISOString(),
       })
       .select("id")
@@ -119,7 +119,7 @@ export async function updateCollection(
         slug,
         description: payload.description.trim() || null,
         sort_order: payload.sort_order,
-        show_in_menu: payload.show_in_menu,
+        show_in_menu: false,
         updated_at: new Date().toISOString(),
       })
       .eq("id", collectionId);

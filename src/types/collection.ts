@@ -11,7 +11,7 @@ export type Collection = {
 
 export type CollectionListItem = Pick<
   Collection,
-  "id" | "name" | "slug" | "sort_order" | "show_in_menu" | "created_at"
+  "id" | "name" | "slug" | "sort_order" | "created_at"
 > & {
   product_count: number;
 };
@@ -23,6 +23,5 @@ export type CollectionFormPayload = {
   slug: string;
   description: string;
   sort_order: number;
-  show_in_menu: boolean;
   productIds: string[];
 };

@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useMemo, useEffect, useState, useTransition } from "react";
+import { BrowseProductsModal } from "@/components/admin/BrowseProductsModal";
 import {
   createCollection,
   updateCollection,
@@ -38,13 +39,22 @@ export function CollectionForm({
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [sortOrder, setSortOrder] = useState(String(initial?.sort_order ?? 0));
-  const [showInMenu, setShowInMenu] = useState(initial?.show_in_menu ?? true);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(
     () => new Set(initial?.productIds ?? []),
   );
+  const [browseOpen, setBrowseOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const productsInCollection = useMemo(
+    () => products.filter((p) => selectedProductIds.has(p.id)),
+    [products, selectedProductIds],
+  );
+
+  const productsNotInCollection = useMemo(
+    () => products.filter((p) => !selectedProductIds.has(p.id)),
+    [products, selectedProductIds],
+  );
 
   useEffect(() => {
     if (!slugTouched && name) {
@@ -52,13 +62,19 @@ export function CollectionForm({
     }
   }, [name, slugTouched]);
 
-  const toggleProduct = (productId: string) => {
+  const removeProduct = (productId: string) => {
     setSelectedProductIds((prev) => {
       const next = new Set(prev);
-      if (next.has(productId)) {
-        next.delete(productId);
-      } else {
-        next.add(productId);
+      next.delete(productId);
+      return next;
+    });
+  };
+
+  const addProducts = (productIds: string[]) => {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      for (const id of productIds) {
+        next.add(id);
       }
       return next;
     });
@@ -67,18 +83,11 @@ export function CollectionForm({
   const handleSubmit = () => {
     setError(null);
 
-    const parsedSortOrder = Number.parseInt(sortOrder, 10);
-    if (Number.isNaN(parsedSortOrder)) {
-      setError("Menu order must be a number.");
-      return;
-    }
-
     const payload: CollectionFormPayload = {
       name,
       slug,
       description,
-      sort_order: parsedSortOrder,
-      show_in_menu: showInMenu,
+      sort_order: initial?.sort_order ?? 0,
       productIds: [...selectedProductIds],
     };
 
@@ -150,62 +159,65 @@ export function CollectionForm({
             placeholder="Shown on the collection page"
           />
         </div>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="sort-order" className="block text-sm font-medium text-slate-300">
-              Menu order
-            </label>
-            <input
-              id="sort-order"
-              type="number"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className={inputClassName}
-            />
-            <p className="mt-1 text-xs text-slate-500">Lower numbers appear first in the menu.</p>
-          </div>
-
-          <div className="flex items-end pb-2">
-            <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={showInMenu}
-                onChange={(e) => setShowInMenu(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
-              />
-              Show in storefront menu
-            </label>
-          </div>
-        </div>
       </div>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-        <h3 className="text-sm font-medium text-slate-300">Products in this collection</h3>
-        <p className="mt-1 text-xs text-slate-500">
-          Selected products appear on the collection page.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-slate-300">Products in this collection</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              {productsInCollection.length} product
+              {productsInCollection.length === 1 ? "" : "s"} in this collection
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setBrowseOpen(true)}
+            disabled={products.length === 0 || productsNotInCollection.length === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-indigo-500 hover:bg-slate-800/80 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+            Browse
+          </button>
+        </div>
 
         {products.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">No products yet. Add products first.</p>
+          <p className="mt-4 text-sm text-slate-500">
+            No products in your store yet. Add products first.
+          </p>
+        ) : productsInCollection.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-slate-700 px-4 py-8 text-center text-sm text-slate-500">
+            No products in this collection. Click <strong className="text-slate-400">Browse</strong> to
+            add products.
+          </p>
         ) : (
-          <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
-            {products.map((product) => (
-              <li key={product.id}>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-800 px-3 py-2.5 transition-colors hover:bg-slate-800/60">
-                  <input
-                    type="checkbox"
-                    checked={selectedProductIds.has(product.id)}
-                    onChange={() => toggleProduct(product.id)}
-                    className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-sm text-slate-200">{product.name}</span>
-                </label>
+          <ul className="mt-4 divide-y divide-slate-800 rounded-lg border border-slate-800">
+            {productsInCollection.map((product) => (
+              <li
+                key={product.id}
+                className="flex items-center justify-between gap-3 px-3 py-2.5"
+              >
+                <span className="min-w-0 truncate text-sm text-slate-200">{product.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeProduct(product.id)}
+                  className="shrink-0 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  aria-label={`Remove ${product.name}`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      <BrowseProductsModal
+        open={browseOpen}
+        onClose={() => setBrowseOpen(false)}
+        availableProducts={productsNotInCollection}
+        onAdd={addProducts}
+      />
 
       {error && (
         <p className="rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">

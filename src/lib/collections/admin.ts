@@ -6,7 +6,7 @@ export async function getCollectionsForAdmin(): Promise<CollectionListItem[]> {
 
   const { data: collections, error } = await supabase
     .from("collections")
-    .select("id, name, slug, sort_order, show_in_menu, created_at")
+    .select("id, name, slug, sort_order, created_at")
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
 
@@ -27,7 +27,6 @@ export async function getCollectionsForAdmin(): Promise<CollectionListItem[]> {
     name: row.name,
     slug: row.slug,
     sort_order: row.sort_order,
-    show_in_menu: row.show_in_menu,
     created_at: row.created_at,
     product_count: countByCollection.get(row.id) ?? 0,
   }));
@@ -40,7 +39,7 @@ export async function getCollectionForEdit(
 
   const { data: collection, error } = await supabase
     .from("collections")
-    .select("id, name, slug, description, sort_order, show_in_menu")
+    .select("id, name, slug, description, sort_order")
     .eq("id", id)
     .maybeSingle();
 
@@ -56,7 +55,6 @@ export async function getCollectionForEdit(
     slug: collection.slug,
     description: collection.description ?? "",
     sort_order: collection.sort_order,
-    show_in_menu: collection.show_in_menu,
     productIds: (links ?? []).map((row) => row.product_id as string),
   };
 }
