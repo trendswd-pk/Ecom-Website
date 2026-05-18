@@ -8,7 +8,7 @@ A full-stack e-commerce web app built with **Next.js 16** (App Router), **TypeSc
 **Live repo (deploy):** [github.com/atonespotpk-ecom/Ecom-Website](https://github.com/atonespotpk-ecom/Ecom-Website)  
 **Backup repo:** [github.com/trendswd-pk/Ecom-Website](https://github.com/trendswd-pk/Ecom-Website)
 
----
+---Updated File Done
 
 ## Tech stack
 
