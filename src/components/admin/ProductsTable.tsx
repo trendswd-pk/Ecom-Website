@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
 import { cn } from "@/lib/utils";
 
@@ -91,12 +92,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
                         </div>
                       )}
                     </div>
-                    <span
-                      className="min-w-0 flex-1 truncate font-medium text-slate-200"
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="min-w-0 flex-1 truncate font-medium text-slate-200 transition-colors hover:text-indigo-300"
                       title={product.name}
                     >
                       {product.name}
-                    </span>
+                    </Link>
                   </div>
                 </td>
                 <td className="min-w-[100px] whitespace-nowrap px-4 py-3 font-medium text-indigo-300">

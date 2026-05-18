@@ -17,6 +17,20 @@ export type CreateProductPayload = {
   variants: ProductVariantInput[];
 };
 
+export type UpdateProductPayload = CreateProductPayload & {
+  productId: string;
+};
+
+export type ProductEditorInitial = {
+  title: string;
+  description: string;
+  status: ProductStatus;
+  imageUrls: string[];
+  colors: string[];
+  sizes: string[];
+  variantRows: VariantRowState[];
+};
+
 export type VariantRowState = {
   key: string;
   color: string;

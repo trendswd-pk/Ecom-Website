@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { deleteProduct } from "@/app/admin/(panel)/products/actions";
-import { ProductForm } from "@/components/admin/ProductForm";
 import type { ProductListItem } from "@/components/admin/ProductsTable";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +32,6 @@ type ProductRowActionsProps = {
 export function ProductRowActions({ product }: ProductRowActionsProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isPending, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -47,7 +45,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
       icon: Pencil,
       onSelect: () => {
         setMenuOpen(false);
-        setEditOpen(true);
+        router.push(`/admin/products/${product.id}/edit`);
       },
     },
     {
@@ -133,26 +131,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
     };
   }, [menuOpen, updateMenuPosition]);
 
-  useEffect(() => {
-    if (!editOpen) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setEditOpen(false);
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [editOpen]);
-
-  const handleEditSuccess = () => {
-    setEditOpen(false);
-    router.refresh();
-  };
-
   const dropdownMenu =
     menuOpen && menuPosition ? (
       <ul
@@ -213,38 +191,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
       </div>
 
       {mounted && dropdownMenu ? createPortal(dropdownMenu, document.body) : null}
-
-      {editOpen && mounted
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={`edit-product-${product.id}`}
-            >
-              <button
-                type="button"
-                className="absolute inset-0 bg-black/60"
-                aria-label="Close dialog"
-                onClick={() => setEditOpen(false)}
-              />
-              <div className="relative z-10 w-full max-w-lg rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-                <h2
-                  id={`edit-product-${product.id}`}
-                  className="mb-6 text-lg font-semibold text-white"
-                >
-                  Edit product
-                </h2>
-                <ProductForm
-                  mode="edit"
-                  product={product}
-                  onSuccess={handleEditSuccess}
-                />
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
     </>
   );
 }

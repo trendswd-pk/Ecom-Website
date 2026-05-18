@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin/session";
 import { createAdminClient } from "@/lib/supabase/server";
-import type { CreateProductPayload, ProductStatus } from "@/types/product";
+import type {
+  CreateProductPayload,
+  ProductStatus,
+  UpdateProductPayload,
+} from "@/types/product";
 
 export type ProductFormState = {
   error?: string;
@@ -139,7 +143,96 @@ export async function createProductWithVariants(
 
   revalidatePath("/admin");
   revalidatePath("/admin/products");
-  redirect("/admin/products");
+  return {};
+}
+
+export async function updateProductWithVariants(
+  payload: UpdateProductPayload,
+): Promise<{ error?: string }> {
+  if (!(await isAdminAuthenticated())) {
+    return { error: "Unauthorized" };
+  }
+
+  const productId = payload.productId.trim();
+  if (!productId) {
+    return { error: "Product ID is required." };
+  }
+
+  const title = payload.title.trim();
+  if (!title) {
+    return { error: "Product title is required." };
+  }
+
+  if (!payload.variants.length) {
+    return { error: "Add at least one color, one size, and fill variant prices." };
+  }
+
+  for (const variant of payload.variants) {
+    if (variant.salePrice < 0 || variant.stockQuantity < 0) {
+      return { error: "Variant prices and stock must be zero or greater." };
+    }
+  }
+
+  const minSalePrice = Math.min(...payload.variants.map((v) => v.salePrice));
+  const totalStock = payload.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
+  const imageUrls = payload.imageUrls.filter(Boolean);
+
+  try {
+    const supabase = createAdminClient();
+
+    const { error: productError } = await supabase
+      .from("products")
+      .update({
+        name: title,
+        description: payload.description.trim() || null,
+        status: payload.status,
+        image_urls: imageUrls,
+        image_url: imageUrls[0] ?? null,
+        price: minSalePrice,
+        stock_quantity: totalStock,
+      })
+      .eq("id", productId);
+
+    if (productError) {
+      return { error: productError.message };
+    }
+
+    const { error: deleteError } = await supabase
+      .from("product_variants")
+      .delete()
+      .eq("product_id", productId);
+
+    if (deleteError) {
+      return { error: deleteError.message };
+    }
+
+    const variantRows = payload.variants.map((variant) => ({
+      product_id: productId,
+      color: variant.color,
+      size: variant.size,
+      sale_price: variant.salePrice,
+      compare_price: variant.comparePrice,
+      cost_price: variant.costPrice,
+      stock_quantity: variant.stockQuantity,
+    }));
+
+    const { error: variantsError } = await supabase
+      .from("product_variants")
+      .insert(variantRows);
+
+    if (variantsError) {
+      return { error: variantsError.message };
+    }
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to update product.";
+    return { error: message };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${productId}/edit`);
+  return {};
 }
 
 export async function createProduct(
