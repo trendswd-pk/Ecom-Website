@@ -1,0 +1,50 @@
+# Mirrors main branch from trendswd-pk/Ecom-Website → atonespotpk-ecom/Ecom-Website
+# Vercel on the second account deploys from that repository.
+#
+# Setup (one time):
+# 1. Create repo on second account: https://github.com/atonespotpk-ecom/Ecom-Website
+# 2. On atonespotpk-ecom: Settings → Developer settings → Personal access tokens
+#    → Generate token with scope: repo (full control of private repositories)
+# 3. On trendswd-pk/Ecom-Website: Settings → Secrets and variables → Actions
+#    → New repository secret → Name: TARGET_REPO_TOKEN → paste the token
+# 4. Never commit the token in code or chat.
+
+name: Sync to Vercel GitHub Account
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: sync-to-atonespotpk-ecom
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to atonespotpk-ecom/Ecom-Website
+        env:
+          TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TARGET_TOKEN}" ]; then
+            echo "::error::Add TARGET_REPO_TOKEN in repo Secrets (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add deploy \
+            "https://x-access-token:${TARGET_TOKEN}@github.com/atonespotpk-ecom/Ecom-Website.git"
+
+          git push deploy HEAD:refs/heads/main --force
