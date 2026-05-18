@@ -54,6 +54,7 @@ export function mapProductToEditorInitial(
     description: product.description ?? "",
     status: normalizeStatus(product.status),
     imageUrls: parseImageUrls(product.image_urls, product.image_url),
+    collectionIds: [],
     colors,
     sizes,
     variantRows,

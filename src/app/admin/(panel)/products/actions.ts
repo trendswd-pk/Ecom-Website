@@ -20,6 +20,34 @@ export type UploadImagesResult = {
   error?: string;
 };
 
+async function syncProductCollections(
+  supabase: ReturnType<typeof createAdminClient>,
+  productId: string,
+  collectionIds: string[],
+) {
+  const { error: deleteError } = await supabase
+    .from("product_collections")
+    .delete()
+    .eq("product_id", productId);
+
+  if (deleteError) {
+    return deleteError.message;
+  }
+
+  if (collectionIds.length === 0) return null;
+
+  const rows = collectionIds.map((collectionId) => ({
+    product_id: productId,
+    collection_id: collectionId,
+  }));
+
+  const { error: insertError } = await supabase
+    .from("product_collections")
+    .insert(rows);
+
+  return insertError?.message ?? null;
+}
+
 export async function uploadProductImages(
   formData: FormData,
 ): Promise<UploadImagesResult> {
@@ -135,6 +163,16 @@ export async function createProductWithVariants(
       await supabase.from("products").delete().eq("id", product.id);
       return { error: variantsError.message };
     }
+
+    const collectionsError = await syncProductCollections(
+      supabase,
+      product.id,
+      payload.collectionIds ?? [],
+    );
+    if (collectionsError) {
+      await supabase.from("products").delete().eq("id", product.id);
+      return { error: collectionsError };
+    }
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to save product.";
@@ -143,6 +181,8 @@ export async function createProductWithVariants(
 
   revalidatePath("/admin");
   revalidatePath("/admin/products");
+  revalidatePath("/admin/collections");
+  revalidatePath("/collections", "layout");
   return {};
 }
 
@@ -223,6 +263,15 @@ export async function updateProductWithVariants(
     if (variantsError) {
       return { error: variantsError.message };
     }
+
+    const collectionsError = await syncProductCollections(
+      supabase,
+      productId,
+      payload.collectionIds ?? [],
+    );
+    if (collectionsError) {
+      return { error: collectionsError };
+    }
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to update product.";
@@ -231,7 +280,9 @@ export async function updateProductWithVariants(
 
   revalidatePath("/admin");
   revalidatePath("/admin/products");
+  revalidatePath("/admin/collections");
   revalidatePath(`/admin/products/${productId}/edit`);
+  revalidatePath("/collections", "layout");
   return {};
 }
 

@@ -8,6 +8,7 @@ type AdminShellProps = {
 const navLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/collections", label: "Collections" },
   { href: "/admin/users", label: "Users" },
 ];
 

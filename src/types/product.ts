@@ -14,6 +14,7 @@ export type CreateProductPayload = {
   description: string;
   status: ProductStatus;
   imageUrls: string[];
+  collectionIds: string[];
   variants: ProductVariantInput[];
 };
 
@@ -26,6 +27,7 @@ export type ProductEditorInitial = {
   description: string;
   status: ProductStatus;
   imageUrls: string[];
+  collectionIds: string[];
   colors: string[];
   sizes: string[];
   variantRows: VariantRowState[];

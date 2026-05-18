@@ -7,6 +7,10 @@ import {
   createProductWithVariants,
   updateProductWithVariants,
 } from "@/app/admin/(panel)/products/actions";
+import {
+  CollectionSelect,
+  type CollectionOption,
+} from "@/components/admin/new-product/CollectionSelect";
 import { ProductImageUpload } from "@/components/admin/new-product/ProductImageUpload";
 import { TagInput } from "@/components/admin/new-product/TagInput";
 import { VariantsTable } from "@/components/admin/new-product/VariantsTable";
@@ -23,9 +27,10 @@ type ProductFormProps = {
   mode: "create" | "edit";
   productId?: string;
   initial?: ProductEditorInitial;
+  collections: CollectionOption[];
 };
 
-export function ProductForm({ mode, productId, initial }: ProductFormProps) {
+export function ProductForm({ mode, productId, initial, collections }: ProductFormProps) {
   const router = useRouter();
   const isEdit = mode === "edit" && productId && initial;
 
@@ -34,6 +39,9 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
   const [description, setDescription] = useState(initial?.description ?? "");
   const [status, setStatus] = useState<ProductStatus>(initial?.status ?? "draft");
   const [imageUrls, setImageUrls] = useState<string[]>(initial?.imageUrls ?? []);
+  const [collectionIds, setCollectionIds] = useState<string[]>(
+    initial?.collectionIds ?? [],
+  );
   const [colors, setColors] = useState<string[]>(initial?.colors ?? []);
   const [sizes, setSizes] = useState<string[]>(initial?.sizes ?? []);
   const [variantRows, setVariantRows] = useState<VariantRowState[]>(
@@ -125,6 +133,7 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
             description,
             status,
             imageUrls,
+            collectionIds,
             variants: variantPayload,
           })
         : await createProductWithVariants({
@@ -132,6 +141,7 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
             description,
             status,
             imageUrls,
+            collectionIds,
             variants: variantPayload,
           });
 
@@ -219,6 +229,12 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
                 <option value="draft">Draft</option>
               </select>
             </div>
+
+            <CollectionSelect
+              collections={collections}
+              selectedIds={collectionIds}
+              onChange={setCollectionIds}
+            />
 
             <ProductImageUpload imageUrls={imageUrls} onChange={setImageUrls} />
           </div>

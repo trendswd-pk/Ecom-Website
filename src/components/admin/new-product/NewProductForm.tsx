@@ -1,7 +1,14 @@
 "use client";
 
-import { ProductForm } from "@/components/admin/new-product/ProductForm";
+import {
+  ProductForm,
+} from "@/components/admin/new-product/ProductForm";
+import type { CollectionOption } from "@/components/admin/new-product/CollectionSelect";
 
-export function NewProductForm() {
-  return <ProductForm mode="create" />;
+type NewProductFormProps = {
+  collections: CollectionOption[];
+};
+
+export function NewProductForm({ collections }: NewProductFormProps) {
+  return <ProductForm mode="create" collections={collections} />;
 }

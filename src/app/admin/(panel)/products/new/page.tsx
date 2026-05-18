@@ -1,8 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { NewProductForm } from "@/components/admin/new-product/NewProductForm";
+import { getCollectionOptions } from "@/lib/collections/admin";
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  let collections: Awaited<ReturnType<typeof getCollectionOptions>> = [];
+
+  try {
+    collections = await getCollectionOptions();
+  } catch {
+    // collections table may not exist yet
+  }
+
   return (
     <div className="flex w-full min-w-0 flex-col">
       <Link
@@ -13,13 +22,8 @@ export default function NewProductPage() {
         Back to products
       </Link>
 
-      <h1 className="mt-6 text-2xl font-semibold text-white">Add new product</h1>
-      <p className="mt-2 text-slate-400">
-        Basic details, images, and variant pricing in two steps.
-      </p>
-
-      <div className="mt-8 w-full">
-        <NewProductForm />
+      <div className="mt-6 w-full">
+        <NewProductForm collections={collections} />
       </div>
     </div>
   );

@@ -2,14 +2,19 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProductForm } from "@/components/admin/new-product/ProductForm";
+import {
+  getCollectionOptions,
+  getProductCollectionIds,
+} from "@/lib/collections/admin";
 import { mapProductToEditorInitial } from "@/lib/products/loadProductForEdit";
 import { createAdminClient } from "@/lib/supabase/server";
+import type { ProductEditorInitial } from "@/types/product";
 
 type EditProductPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function getProductForEdit(id: string) {
+async function getProductForEdit(id: string): Promise<ProductEditorInitial | null> {
   const supabase = createAdminClient();
 
   const { data: product, error: productError } = await supabase
@@ -31,12 +36,27 @@ async function getProductForEdit(id: string) {
 
   if (variantsError) return null;
 
-  return mapProductToEditorInitial(product, variants ?? []);
+  const collectionIds = await getProductCollectionIds(id);
+  const initial = mapProductToEditorInitial(product, variants ?? []);
+  initial.collectionIds = collectionIds;
+
+  return initial;
 }
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { id } = await params;
-  const initial = await getProductForEdit(id);
+
+  let initial: ProductEditorInitial | null = null;
+  let collections: Awaited<ReturnType<typeof getCollectionOptions>> = [];
+
+  try {
+    [initial, collections] = await Promise.all([
+      getProductForEdit(id),
+      getCollectionOptions(),
+    ]);
+  } catch {
+    // ignore
+  }
 
   if (!initial) {
     notFound();
@@ -52,13 +72,13 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         Back to products
       </Link>
 
-      <h1 className="mt-6 text-2xl font-semibold text-white">Edit product</h1>
-      <p className="mt-2 text-slate-400">
-        Update details, images, and variant pricing.
-      </p>
-
-      <div className="mt-8 w-full">
-        <ProductForm mode="edit" productId={id} initial={initial} />
+      <div className="mt-6 w-full">
+        <ProductForm
+          mode="edit"
+          productId={id}
+          initial={initial}
+          collections={collections}
+        />
       </div>
     </div>
   );
